@@ -2,5 +2,5 @@ import axios from "axios";
 
 export const api = axios.create({
     //baseURL: "http://localhost:3333"
-    baseURL: "https://pesquisa-preco-back-end.vercel.app/"
+    baseURL: "https://pesquisa-preco-back-end.vercel.app"
 });
