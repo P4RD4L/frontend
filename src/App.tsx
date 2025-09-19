@@ -31,7 +31,11 @@ export default function App() {
 
   async function LoadProducts() {
     const response = await api.get("/products");
-    setProducts(response.data);
+
+    //response.sort((a, b) => b.data - a.data);
+    //setProducts(response.data.sort((a: { data: number; }, b: { data: number; }) => b.data - a.data));
+
+    setProducts(response.data)
   }
 
   async function handleSubmit(event: FormEvent){
@@ -76,6 +80,11 @@ export default function App() {
   ? products.filter(product => product.market.toLowerCase().includes(search.toLowerCase()))
   : [];
 
+  //const filteredProducts = search.length > 0
+  //? products.filter(product => product.created_at.indexOf()
+    //productName.toLowerCase().includes(search.toLowerCase()))
+  //: [];
+
   return(
     <div className="w-full min-h-screen bg-gray-800 flex justify-center px-4">
       <main className="my-10 w-full md:max-w-2xl">
@@ -119,6 +128,7 @@ export default function App() {
             <option value="">Todos</option>
             <option value="Avenida">Avenida</option>
             <option value="Amigão">Amigão</option>
+            <option value="Atacadão">Atacadão</option>
             <option value="São Judas">São Judas</option>
           </select>
         </div>
@@ -144,7 +154,7 @@ export default function App() {
 
         <section className="flex gap-4 py-6"/>
 
-        <table className="table-fixed w-full bg-white rounded p-2 border-2">
+        <table className="border-collapse border-2 table-fixed w-full bg-white rounded p-2">
           <thead>
             <tr className="border-4">
               <th className="border-4">Mercado</th>
@@ -155,92 +165,37 @@ export default function App() {
           </thead>
           <tbody>
             {search.length > 0 ? (
-              <td className="px-4 py-4 items-center">
+              <>
                 {filteredMarkets.map((product, index) => (
-                <tr key={index} className="text-left">{product.market}</tr>
+                  <tr key={index} className="border-collapse border-2 px-4 py-4 items-center">
+                    <td  className="">{product.market}</td>
+                    <td className="">{product.productName}</td>
+                    <td className=""> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                      .format(product.price)}</td>
+                    <td className="">{moment(product.created_at)
+                        .format('DD/MM/YYYY, HH:mm')}</td>
+                  </tr>
                 ))}
-              </td>
-              ) : (
-                <td className="px-4 py-4 items-center">
-                  {products.map((product, index) => (
-                  <tr key={index} className="text-left">{product.market}</tr>
-                  ))}
-              </td>
-            )}
-
-            {search.length > 0
-              ? (
-                <td className="px-4 py-4 items-center">
-                  {filteredMarkets.map((product) => (
-                    <tr className="text-left">{product.productName}</tr>
-                  ))}
-                </td>)
-              : (
-                <td className="px-4 py-4 items-center">
-                  {products.map((product) => (
-                  <tr className="text-left">{product.productName}</tr>
-                  ))}
-                </td>
-            )}
-
-            {search.length > 0 ? (
-            <td className="px-4 py-4 text-center">
-              {filteredMarkets.map((product) => (
-              <tr className="text-center">{product.price}</tr>
-              ))}
-            </td>
+              </>
             ) : (
-              <td className="px-4 py-4 text-center">
-                {products.map((product) => (
-                //<tr className="text-center">{(product.price)}</tr>
-                <tr className="text-center">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}</tr>
+              <>
+                {products.map((product, index) => (
+                  <tr key={index} className="border-collapse border-2 px-4 py-4 items-center">
+                    <td className="px-4 py-1">{product.market}</td>
+                    <td className="px-4 py-1">{product.productName}</td>
+                    <td className="px-4 py-1">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+                      .format(product.price)}</td>
+                    <td className="px-4 py-1">{moment(product.created_at)
+                      .format('DD/MM/YYYY, HH:mm')}</td>
+                  </tr>
                 ))}
-            </td>
+                </>
             )}
-
-            {search.length > 0 ? (
-              <td className="px-4 py-4 text-center">
-                {filteredMarkets.map((product) => (
-                  <tr className="text-center">{moment(product.created_at).format('DD/MM/YYYY, H:mm')}</tr>
-                ))}
-              </td>
-              ) : (
-                <td className="px-4 py-4 text-center">
-                  {products.map((product) => (
-                    <tr>{moment(product.created_at).format('DD/MM/YYYY, H:mm')}</tr>
-                  ))}
-                </td>
-              )}
           </tbody>
         </table>
 
         <section className="flex gap-4 py-6"/>
-
-        <table className="table-fixed w-full bg-white rounded p-2 border-2">
-          <thead>
-            <tr className="border-4">
-              <th className="border-4">Mercado</th>
-              <th className="border-4">Preço</th>
-              <th className="border-4">Alteração</th>
-            </tr>
-          </thead>
-          <tbody>
-            {search.length > 0 ? (
-              <tr>
-                {filteredMarkets.map((product) => (
-                <><tr><td>{product.market}</td></tr><tr><td>{product.price}</td></tr></>
-                ))}
-              </tr>
-              ) : (
-                <tr>
-                  {products.map((product) => (
-                  <tr className="border-4"><td>{product.market}</td><td>{product.price}</td></tr>
-                  ))}
-              </tr>
-             )}
-          </tbody>
-        </table>
 
         <section className="flex flex-col gap-4 py-4">
           {products.map((product) => (
@@ -259,7 +214,7 @@ export default function App() {
           ))}
         </section>
 
-        <section className="flex gap-4 py-6">
+        <section className="grid grid-cols-4 gap-4 py-6">
           {products.map((product, index) => (
             <article key={index}
               className="w-full bg-white rounded p-2 relative hover:scale-110 duration-200" 
@@ -290,12 +245,14 @@ export default function App() {
                 <hr className="border-t-solid border-1 border-grey" />
                 <input
                   type='text'
+                  disabled= {true}
                   className='bg-slate-100 py-3 px-4 rounded-lg border'
                   placeholder='Seu texto aqui'
                   defaultValue={selectedItem?.id}/>
 
                   <input
                   type='text'
+                  disabled= {true}
                   className='bg-slate-100 py-3 px-4 rounded-lg border'
                   placeholder='Seu texto aqui'
                   defaultValue={selectedItem?.productName}/>
