@@ -119,87 +119,64 @@ export default function App() {
     setOpenModal(true)
   }
 
-const filteredMarkets = products.filter((product) => {
-    const productSearchTerm = (searchProduct || '').trim().toLowerCase()
-    const marketSearchTerm = (searchMarket || '').trim().toLowerCase()
+  const filteredMarkets = products.filter((product) => {
+      const productSearchTerm = (searchProduct || '').trim().toLowerCase()
+      const marketSearchTerm = (searchMarket || '').trim().toLowerCase()
 
-    const condicaoBuscaProduto = productSearchTerm.length === 0 || (
-        product.productRelName.toLowerCase().includes(productSearchTerm)
-    )
+      const condicaoBuscaProduto = productSearchTerm.length === 0 || (
+          product.productRelName.toLowerCase().includes(productSearchTerm)
+      )
 
-    const condicaoBuscaMercado = marketSearchTerm.length === 0 || (
-        product.market.toLowerCase().includes(marketSearchTerm)
-    )
+      const condicaoBuscaMercado = marketSearchTerm.length === 0 || (
+          product.market.toLowerCase().includes(marketSearchTerm)
+      )
 
-    return condicaoBuscaProduto && condicaoBuscaMercado;
-})
+      return condicaoBuscaProduto && condicaoBuscaMercado;
+  })
 
+  const sortedItems = useMemo(() => {
+    // Decide qual array usar: o filtrado ou o completo
+    const itemsToSort = searchMarket.length > 0 || searchProduct.length > 0 ? filteredMarkets : products;
+    // Cria uma cópia para não modificar o array original
+    const sortableItems = [...itemsToSort];
 
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        // Pega os valores para comparar
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
 
+        // LÓGICA DE COMPARAÇÃO
+        let comparison = 0;
 
+        // 1. Se for a coluna de data
+        if (sortConfig.key === 'created_at') {
+          const dateA = new Date(aValue as string).getTime();
+          const dateB = new Date(bValue as string).getTime();
+          comparison = dateA - dateB;
+        }
+        // 2. Se for uma coluna de número (ex: 'price')
+        else if (typeof aValue === 'number' && typeof bValue === 'number') {
+          comparison = aValue - bValue;
+        }
+        // 3. Se for uma coluna de texto (ex: 'market')
+        else if (typeof aValue === 'string' && typeof bValue === 'string') {
+          comparison = aValue.localeCompare(bValue);
+        }
+        // (Opcional) Se for uma coluna boolean
+        else if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+          comparison = aValue === bValue ? 0 : aValue ? -1 : 1;
+        }
 
+        // Inverte o resultado se a direção for descendente
+        return sortConfig.direction === 'ascending' ? comparison : -comparison;
+      });
+    }
 
+    return sortableItems;
+  }, [products, filteredMarkets, searchMarket, searchProduct, sortConfig]); // Dependências do useMemo
 
-const sortedItems = useMemo(() => {
-  // Decide qual array usar: o filtrado ou o completo
-  const itemsToSort = searchMarket.length > 0 || searchProduct.length > 0 ? filteredMarkets : products;
-  // Cria uma cópia para não modificar o array original
-  const sortableItems = [...itemsToSort];
-
-  if (sortConfig.key) {
-    sortableItems.sort((a, b) => {
-      // Pega os valores para comparar
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-
-      // LÓGICA DE COMPARAÇÃO
-      let comparison = 0;
-
-      // 1. Se for a coluna de data
-      if (sortConfig.key === 'created_at') {
-        const dateA = new Date(aValue as string).getTime();
-        const dateB = new Date(bValue as string).getTime();
-        comparison = dateA - dateB;
-      }
-      // 2. Se for uma coluna de número (ex: 'price')
-      else if (typeof aValue === 'number' && typeof bValue === 'number') {
-        comparison = aValue - bValue;
-      }
-      // 3. Se for uma coluna de texto (ex: 'market')
-      else if (typeof aValue === 'string' && typeof bValue === 'string') {
-        comparison = aValue.localeCompare(bValue);
-      }
-      // (Opcional) Se for uma coluna boolean
-      else if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-        comparison = aValue === bValue ? 0 : aValue ? -1 : 1;
-      }
-
-      // Inverte o resultado se a direção for descendente
-      return sortConfig.direction === 'ascending' ? comparison : -comparison;
-    });
-  }
-
-  return sortableItems;
-}, [products, filteredMarkets, searchMarket, searchProduct, sortConfig]); // Dependências do useMemo
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  console.log('Objeto selectedItem:', selectedItem);
 
   return(
     <div className="w-full min-h-screen bg-gray-800 flex justify-center px-4">
@@ -289,9 +266,8 @@ const sortedItems = useMemo(() => {
               <th className="border-4">Produto</th>
               <th className="border-4">Preço</th>
               <th 
-                className="border-4 cursor-pointer" 
-                onClick={() => requestSort('created_at')}
-              >
+              className="border-4 cursor-pointer" 
+              onClick={() => requestSort('created_at')}>
                 Alteração 
                 {/* Indicador visual da ordenação */}
                 {sortConfig.key === 'created_at' && (
@@ -302,7 +278,10 @@ const sortedItems = useMemo(() => {
           </thead>
           <tbody>
             {sortedItems.map((product, index) => (
-              <tr key={index} className="border-collapse border-2 px-4 py-4 items-center">
+              <tr
+              key={index}
+              className="border-collapse border-2 px-4 py-4 items-center"
+              onClick={() => handleClick(product)}>
                 <td className="px-4 py-1">{product.market}</td>
                 <td className="px-4 py-1">{product.productRelName + " " + product.brandRelName}</td>
                 <td className="px-4 py-1">
@@ -355,52 +334,53 @@ const sortedItems = useMemo(() => {
         </section>
 
         <Modal openModal={openModal} onClose={() => setOpenModal(false)}>
-              <div className="flex flex-col gap-4">
-                <h1 className="text-2xl">Alteração de Preço</h1>
-                <h1 className="text-2xl">Produto: {selectedItem?.id}</h1>
-                <p>
-                  Modal
-                </p>
-                <hr className="border-t-solid border-1 border-grey" />
-                <input
-                  type='text'
-                  disabled= {true}
-                  className='bg-slate-100 py-3 px-4 rounded-lg border'
-                  placeholder='Seu texto aqui'
-                  defaultValue={selectedItem?.id}/>
+          <div className="flex flex-col gap-4">
+            <h1 className="text-2xl">Alteração de Preço</h1>
+            <h1 className="text-2xl">Produto: {selectedItem?.id}</h1>
+            <p>
+              Modal
+            </p>
+            <hr className="border-t-solid border-1 border-grey" />
+            <input
+              type='text'
+              disabled= {true}
+              className='bg-slate-100 py-3 px-4 rounded-lg border'
+              placeholder='Seu texto aqui'
+              defaultValue={selectedItem?.id}/>
 
-                <input
-                  type='text'
-                  disabled= {true}
-                  className='bg-slate-100 py-3 px-4 rounded-lg border'
-                  placeholder='Seu texto aqui'
-                  defaultValue={selectedItem?.productName}/>
+            <input
+              type='text'
+              disabled= {true}
+              className='bg-slate-100 py-3 px-4 rounded-lg border'
+              placeholder='Digite o produto'
+              // Use `?? ''` para garantir que seja uma string vazia se o valor for nulo/undefined
+              defaultValue={`${selectedItem?.productRelName ?? ''} ${selectedItem?.brandRelName ?? ''}`.trim()}/>
 
-                  <input
-                  type='text'
-                  className='bg-slate-100 py-3 px-4 rounded-lg border'
-                  placeholder='Digite o supermercado'
-                  defaultValue={searchMarket ? searchMarket : ""}
-                  //defaultValue={selectedItem?.market}
-                  disabled= {searchMarket ? true : false}
-                  ref={marketRef}/>
+            <input
+              type='text'
+              className='bg-slate-100 py-3 px-4 rounded-lg border'
+              placeholder='Digite o supermercado'
+              defaultValue={searchMarket ? searchMarket : ""}
+              //defaultValue={selectedItem?.market}
+              disabled= {searchMarket ? true : false}
+              ref={marketRef}/>
 
-                <input
-                  type='text'
-                  className='bg-slate-100 py-3 px-4 rounded-lg border'
-                  placeholder='Digite o preço'
-                  //defaultValue={selectedItem?.price}
-                  ref={priceRef}/>
+            <input
+              type='text'
+              className='bg-slate-100 py-3 px-4 rounded-lg border'
+              placeholder='Digite o preço'
+              //defaultValue={selectedItem?.price}
+              ref={priceRef}/>
 
-                <div className="flex flex-row justify-center">
-                  <button
-                    className="border border-neutral-300 rounded-lg py-1.5 px-10
-                    bg-blue-500 hover:bg-blue-600 text-white"
-                    onClick={handleSubmitPrice}>
-                    Cadastrar
-                  </button>
-                </div>
-              </div>
+            <div className="flex flex-row justify-center">
+              <button
+                className="border border-neutral-300 rounded-lg py-1.5 px-10
+                bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={handleSubmitPrice}>
+                Cadastrar
+              </button>
+            </div>
+          </div>
         </Modal>
       </main>
     </div>
