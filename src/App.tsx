@@ -59,10 +59,10 @@ export default function App() {
 
   async function LoadProducts() {
     const response = await api.get("/products")
-    const responsePrice = await api.get("/prices")
-
-    setProducts(responsePrice.data)
     setProductsTabela(response.data)
+
+    const responsePrice = await api.get("/prices")
+    setProducts(responsePrice.data)
   }
 
   async function handleSubmitProduct(event: FormEvent){
@@ -91,7 +91,8 @@ export default function App() {
       price: parseFloat (priceRef.current?.value.replace(",", ".")),
       market: marketRef.current?.value,
       id: selectedItem?.id,
-      productName: selectedItem?.productName
+      productName: selectedItem?.productName,
+      brand: selectedItem?.brand
     })
 
     setProducts(allProducts => [...allProducts, response.data])
@@ -130,7 +131,6 @@ export default function App() {
       const condicaoBuscaMercado = marketSearchTerm.length === 0 || (
           product.market.toLowerCase().includes(marketSearchTerm)
       )
-
       return condicaoBuscaProduto && condicaoBuscaMercado;
   })
 
@@ -354,7 +354,10 @@ export default function App() {
               className='bg-slate-100 py-3 px-4 rounded-lg border'
               placeholder='Digite o produto'
               // Use `?? ''` para garantir que seja uma string vazia se o valor for nulo/undefined
-              defaultValue={`${selectedItem?.productRelName ?? ''} ${selectedItem?.brandRelName ?? ''}`.trim()}/>
+              defaultValue={selectedItem?.productName == undefined ?
+                `${selectedItem?.productRelName ?? ''} ${selectedItem?.brandRelName ?? ''}`.trim() :
+                `${selectedItem?.productName ?? ''} ${selectedItem?.brand ?? ''}`.trim()}
+              />
 
             <input
               type='text'
